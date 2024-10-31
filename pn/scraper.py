@@ -45,6 +45,23 @@ class Scraper:
             'Stafford': 'react-select-3-option-25',
             'Washington': 'react-select-3-option-26',
         }
+        self.notice_types = {
+            'All': 'react-select-4-option-0',
+            'Bids & Proposals': 'react-select-4-option-1',
+            'City of Alexandria': 'react-select-4-option-2',
+            'City of Charlottesville': 'react-select-4-option-3',
+            'City of Fredericksburg': 'react-select-4-option-4',
+            'Frederick County': 'react-select-4-option-5',
+            'Legal Notices': 'react-select-4-option-6',
+            'Notice of Hearing': 'react-select-4-option-7',
+            'Official Notices': 'react-select-4-option-8',
+            'Orange County': 'react-select-4-option-9',
+            'Public Sale Notices': 'react-select-4-option-10',
+            'Rappahannock County': 'react-select-4-option-11',
+            'Special Notices': 'react-select-4-option-12',
+            'Spotsylvania County': 'react-select-4-option-13',
+            'Trustee Sales': 'react-select-4-option-14',
+        }
 
 
     def load_url(self):
@@ -103,19 +120,16 @@ class Scraper:
         
 
 
-    def execute_search(self, search=None, start_date=None, end_date=None, states=None, counties=None):
+    def search(self, search_phrase=None, start_date=None, end_date=None, states=None, counties=None, notice_types=None):
         """
         search: str
         start_date: datetime
         end_date: datetime
         states: list[str]
         """
-        if None not in (search, start_date, end_date):
-            return
-        
-        if search:
+        if search_phrase:
             search_input = self.driver.find_element(By.ID, 'searchbtn')
-            search_input.send_keys(search)
+            search_input.send_keys(search_phrase)
 
         if start_date:
             self.set_start_date(start_date)
@@ -128,6 +142,9 @@ class Scraper:
 
         if counties:
             self.set_counties(counties)
+
+        if notice_types:
+            self.set_notice_types(notice_types)
 
         search_button = self.driver.find_element(By.ID, 'search')
         search_button.click()
@@ -198,6 +215,18 @@ class Scraper:
 
         county_dropdown.click()
 
+    def set_notice_types(self, notice_types):
+        """
+        notice_types: list[str]
+        """
+        notice_type_dropdown = self.driver.find_element(By.CSS_SELECTOR, 'div#noticetype.css-2b097c-container')
+        notice_type_dropdown.click()
+
+        for notice_type in notice_types:
+            notice_type_option = self.driver.find_element(By.CSS_SELECTOR, f'div#{self.notice_types[notice_type]}')
+            notice_type_option.click()
+
+        notice_type_dropdown.click()
 
     def save_notices(self):
         notices = self.driver.find_elements(By.CLASS_NAME, 'public-notice-result')
