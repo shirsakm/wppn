@@ -1,3 +1,4 @@
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -37,12 +38,71 @@ class Scraper:
                 .until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div[1]/div[2]/div[2]/div[5]/div[3]/button')))
 
 
-    def execute_search(self, search=None):
-        if not search:
+    def get_current_month(self):
+        current_month = self.driver.find_element(By.CSS_SELECTOR, 'div.react-datepicker__current-month') \
+            .get_attribute('innerHTML')
+        current_month = datetime.strptime(current_month, '%B %Y')
+        return current_month    
+
+
+    def reach_target_date(self, target_date):
+        """
+        target_date: datetime 
+        Requires the date picker to be opened beforehand
+        """
+        current_month = self.get_current_month()
+        while target_date.strftime('%B %Y') != current_month.strftime('%B %Y'):
+            if target_date < current_month:
+                prev_month_button = self.driver.find_element(By.CSS_SELECTOR, 'button.react-datepicker__navigation.react-datepicker__navigation--previous')
+                prev_month_button.click()
+            else:
+                next_month_button = self.driver.find_element(By.CSS_SELECTOR, 'button.react-datepicker__navigation.react-datepicker__navigation--next')
+                next_month_button.click()
+            current_month = self.get_current_month()
+        
+        date_button = self.driver.find_element(By.CSS_SELECTOR,
+            'div.react-datepicker__day.react-datepicker__day--%03d' \
+            % int((target_date).strftime('%d')))
+        date_button.click()
+        
+
+
+    def execute_search(self, search=None, start_date=None, end_date=None):
+        """
+        search: str
+        start_date: datetime
+        end_date: datetime
+        """
+        existing_start_date = datetime.strptime(self.driver \
+            .find_element(By.XPATH, '//input[@id="dateStart"]') \
+            .get_attribute('value'), '%m/%d/%Y')
+            
+        existing_end_date = datetime.strptime(self.driver \
+            .find_element(By.XPATH, '//input[@id="dateEnd"]') \
+            .get_attribute('value'), '%m/%d/%Y')
+
+        if None not in (search, start_date, end_date):
+            return
+        
+        if start_date == existing_start_date or end_date == existing_end_date:
             return
 
-        search_input = self.driver.find_element(By.ID, 'searchbtn')
-        search_input.send_keys(search)
+        if search:
+            search_input = self.driver.find_element(By.ID, 'searchbtn')
+            search_input.send_keys(search)
+
+        if start_date:
+            start_date_input = self.driver.find_element(By.XPATH, '//input[@id="dateStart"]')
+            start_date_input.click()
+            
+            self.reach_target_date(start_date)
+
+        if end_date:
+            end_date_input = self.driver.find_element(By.XPATH, '//input[@id="dateEnd"]')
+            end_date_input.click()
+
+            self.reach_target_date(end_date)
+
         search_button = self.driver.find_element(By.ID, 'search')
         search_button.click()
         
