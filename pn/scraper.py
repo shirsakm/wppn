@@ -1,4 +1,4 @@
-import pandas as pd
+import csv
 
 from datetime import datetime
 from selenium import webdriver
@@ -14,7 +14,8 @@ class Scraper:
         initialize: bool
         It is highly recommended to initialize by default, unless you have a very good reason to manually call _load_url()
         """
-        self.driver = webdriver.Firefox()
+        self.driver_options = webdriver.FirefoxOptions()
+        self.driver = webdriver.Firefox(options=self.driver_options)
         self.URL = URL
         self.STATE_OPTIONS = {
             'All': 'react-select-2-option-0',
@@ -240,19 +241,25 @@ class Scraper:
             .until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div[1]/div[2]/div[2]/div[1]')))
 
 
-    def save_all_notices(self, format='csv'):
+    def save_all_notices(self, filename, format='csv'):
         """
+        filename: str
         format: str
         format can be 'csv'
         """
-        self._load_all_notices()        
+        self._load_all_notices()
+        with open(f'{filename}.csv', 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(['ID', 'Data', 'Location', 'Type', 'Text'])
 
+        scraped_id = []
         notices = self.driver.find_elements(By.CSS_SELECTOR, 'div.public-notice-result')
-        notice_data = pd.DataFrame(columns=['ID', 'Data', 'Location', 'Type', 'Text'])
         for notice in notices:
             notice_id = notice.get_attribute('data-notice-id')
+            if notice_id in scraped_id:
+                continue
 
-            dl_driver = webdriver.Firefox()
+            dl_driver = webdriver.Firefox(options=self.driver_options)
             dl_driver.get(f'{self.URL}?activeNotice={notice_id}')
 
             WebDriverWait(dl_driver, 30) \
@@ -262,24 +269,21 @@ class Scraper:
             notice_date = datetime.strptime(' '.join(header.find_element(By.CSS_SELECTOR, 'p') \
                 .get_attribute('innerHTML') \
                 .split(' ')[-3:]), '%B %d, %Y')
-            notice_type = header.find_element(By.CSS_SELECTOR, 'h2')
+            notice_type = header.find_element(By.CSS_SELECTOR, 'h2').get_attribute('innerHTML')
             location = header.find_element(By.XPATH, '/html/body/div[1]/div[1]/div[1]/div[2]/div/div[1]/div/div/div/div[2]') \
                 .get_attribute('innerHTML')
             
             dd_list = dl_driver.find_element(By.CSS_SELECTOR, 'dd')
             paragraphs = dd_list.find_elements(By.CSS_SELECTOR, 'p')
-            text = '\n'.join([p.get_attribute('innerHTML') for p in paragraphs])
-
-            notice_data = notice_data.append({
-                'ID': notice_id,
-                'Date': notice_date.strftime('%Y-%m-%d'),
-                'Type': notice_type,
-                'Location': location,
-                'Text': text
-            }, ignore_index=True)
+            text = '\n'.join([p.text for p in paragraphs])
 
             dl_driver.quit()
 
+            with open(f'{filename}.csv', 'a') as f:
+                writer = csv.writer(f)
+                writer.writerow([notice_id, notice_date.strftime('%Y-%m-%d'), location, notice_type, text])
+
+            scraped_id.append(notice_id)
 
     def close(self):
         self.driver.quit()
