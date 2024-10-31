@@ -16,6 +16,35 @@ class Scraper:
             'Maryland': 'react-select-2-option-3',
             'Virginia': 'react-select-2-option-4',
         }
+        self.county_options = {
+            'All': 'react-select-3-option-0',
+            'Anne Arundel': 'react-select-3-option-1',
+            'Arlington': 'react-select-3-option-2',
+            'Calvert': 'react-select-3-option-3',
+            'Caroll': 'react-select-3-option-4',
+            'Charles': 'react-select-3-option-5',
+            'City of Alexandria': 'react-select-3-option-6',
+            'City of Charlottesville': 'react-select-3-option-7',
+            'City of Fredericksburg': 'react-select-3-option-8',
+            'Clarke': 'react-select-3-option-9',
+            'Culpeper': 'react-select-3-option-10',
+            'District of Columbia': 'react-select-3-option-11',
+            'Fairfax': 'react-select-3-option-12',
+            'Fauquier': 'react-select-3-option-13',
+            'Frederick': 'react-select-3-option-14',
+            'Howard': 'react-select-3-option-15',
+            'Loudoun': 'react-select-3-option-16',
+            'Montgomery': 'react-select-3-option-17',
+            'Orange': 'react-select-3-option-18',
+            'Other': 'react-select-3-option-19',
+            'Prince George\'s': 'react-select-3-option-20',
+            'Prince William': 'react-select-3-option-21',
+            'Rappahannock': 'react-select-3-option-22',
+            'Richmond': 'react-select-3-option-23',
+            'Spotsylvania': 'react-select-3-option-24',
+            'Stafford': 'react-select-3-option-25',
+            'Washington': 'react-select-3-option-26',
+        }
 
 
     def load_url(self):
@@ -74,7 +103,7 @@ class Scraper:
         
 
 
-    def execute_search(self, search=None, start_date=None, end_date=None, states=None):
+    def execute_search(self, search=None, start_date=None, end_date=None, states=None, counties=None):
         """
         search: str
         start_date: datetime
@@ -96,6 +125,9 @@ class Scraper:
 
         if states:
             self.set_states(states)
+
+        if counties:
+            self.set_counties(counties)
 
         search_button = self.driver.find_element(By.ID, 'search')
         search_button.click()
@@ -151,6 +183,20 @@ class Scraper:
             state_option.click()
 
         state_dropdown.click()
+
+
+    def set_counties(self, counties):
+        """
+        counties: list[str]
+        """
+        county_dropdown = self.driver.find_element(By.CSS_SELECTOR, 'div#county.css-2b097c-container')
+        county_dropdown.click()
+
+        for county in counties:
+            county_option = self.driver.find_element(By.CSS_SELECTOR, f'div#{self.county_options[county]}')
+            county_option.click()
+
+        county_dropdown.click()
 
 
     def save_notices(self):
