@@ -15,6 +15,7 @@ class Scraper:
         It is highly recommended to initialize by default, unless you have a very good reason to manually call _load_url()
         """
         self.driver_options = webdriver.FirefoxOptions()
+        self.driver_options.add_argument('--headless')
         self.driver = webdriver.Firefox(options=self.driver_options)
         self.URL = URL
         self.STATE_OPTIONS = {
@@ -241,14 +242,14 @@ class Scraper:
             .until(EC.visibility_of_element_located((By.XPATH, '/html/body/div[1]/div[1]/div[2]/div[2]/div[1]')))
 
 
-    def save_all_notices(self, filename, format='csv'):
+    def save_all_notices(self, path, format='csv'):
         """
-        filename: str
+        path: str
         format: str
         format can be 'csv'
         """
         self._load_all_notices()
-        with open(f'{filename}.csv', 'w') as f:
+        with open(f'{path}.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerow(['ID', 'Data', 'Location', 'Type', 'Text'])
 
@@ -279,7 +280,7 @@ class Scraper:
 
             dl_driver.quit()
 
-            with open(f'{filename}.csv', 'a') as f:
+            with open(f'{path}.csv', 'a') as f:
                 writer = csv.writer(f)
                 writer.writerow([notice_id, notice_date.strftime('%Y-%m-%d'), location, notice_type, text])
 
