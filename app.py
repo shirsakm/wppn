@@ -1,4 +1,4 @@
-from pn import Scraper
+from wppn import Scraper
 from datetime import datetime
 
 scraper = Scraper('https://publicnotices.washingtonpost.com/')
