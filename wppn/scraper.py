@@ -114,10 +114,10 @@ class Scraper:
             .get_attribute('innerHTML') \
             .split(' ')[1])
 
-        if notice_number < 80:
+        if notice_number <= 20:
             return
 
-        iters_required = int(notice_number) // 80
+        iters_required = int(notice_number) // 20
         for _ in range(iters_required):
             load_more = self.driver.find_element(By.XPATH, '/html/body/div[1]/div[1]/div[2]/div[2]/div[5]/div[3]/button')
             load_more.click()
@@ -285,6 +285,7 @@ class Scraper:
                 writer.writerow([notice_id, notice_date.strftime('%Y-%m-%d'), location, notice_type, text])
 
             scraped_id.append(notice_id)
+
 
     def close(self):
         self.driver.quit()
